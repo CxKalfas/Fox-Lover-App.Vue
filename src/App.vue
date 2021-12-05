@@ -1,35 +1,42 @@
 <template>
   <div class="app">
     <h1 class="title">🦊 Choose your favorite foxes! 🦊</h1>
-    <img class="card" alt="So floofy!" :src="currentFoxUrl" />
+    <transition name="fade">
+      <img
+        v-if="currentFoxUrl"
+        class="card"
+        alt="So floofy!"
+        :src="currentFoxUrl"
+      />
+    </transition>
 
     <button @click="addFave" :disabled="isAlreadyInFavorites" class="fav">
       Fave
     </button>
     <button @click="loadFox" class="next">Next</button>
-
     <section class="favorites">
       <h2>Favorite Floofs</h2>
-      <ul class="favorites-list">
+      <transition-group
+        class="favorites-listwrap favorites-list"
+        name="slide"
+        tag="ul"
+      >
         <li
           v-for="(floof, index) in favorites"
           :key="floof"
           class="favorites-item"
         >
-          <img alt="nice fox" :src="floof" class="favorites-img" />
-          <button @click="removeFave(index)" class="remove">Remove</button>
+          <app-fox :fox="floof" @remove="removeFave(index)"></app-fox>
         </li>
-      </ul>
+      </transition-group>
     </section>
   </div>
 </template>
-
 <script>
+import Fox from "./components/Fox";
 export default {
-  computed: {
-    isAlreadyInFavorites() {
-      return this.favorites.indexOf(this.currentFoxUrl) > -1;
-    },
+  components: {
+    appFox: Fox,
   },
   data() {
     return {
@@ -37,8 +44,14 @@ export default {
       favorites: [],
     };
   },
+  computed: {
+    isAlreadyInFavorites() {
+      return this.favorites.indexOf(this.currentFoxUrl) > -1;
+    },
+  },
   methods: {
     loadFox: async function () {
+      this.currentFoxUrl = "";
       const response = await fetch("https://randomfox.ca/floof/");
       const foxData = await response.json();
       this.currentFoxUrl = foxData.image;
@@ -47,9 +60,10 @@ export default {
       this.favorites.push(this.currentFoxUrl);
     },
     removeFave(index) {
-      this.favorites.splice(this.currentFoxUrl, 1);
+      this.favorites.splice(index, 1);
     },
   },
+
   created() {
     this.loadFox();
   },
@@ -63,6 +77,33 @@ body {
   font-family: arial;
   background: rgb(71, 36, 23);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ff9999' fill-opacity='0.4'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1s ease;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active {
+  transition: all 0.3s ease;
+}
+.slide-enter,
+.slide-leave-to {
+  transform: translateX(10px);
+  opacity: 0;
+}
+
+.slide-leave-active {
+  position: absolute;
+  transition: all 0.3s ease;
+}
+
+.slide-move {
+  transition: transform 0.5s;
 }
 
 .app {
